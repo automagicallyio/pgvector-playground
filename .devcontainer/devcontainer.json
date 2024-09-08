@@ -22,7 +22,9 @@
 				"mtxr.sqltools",
 				"mtxr.sqltools-driver-pg",
 				"ms-vscode.vscode-node-azure-pack",
-				"mechatroner.rainbow-csv"
+				"mechatroner.rainbow-csv",
+				"GitHub.copilot",
+				"GitHub.copilot-chat"
 			],
 			// Set *default* container specific settings.json values on container create.
 			"settings": {
