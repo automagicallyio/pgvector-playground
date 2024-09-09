@@ -27,7 +27,8 @@ from dotenv import load_dotenv
 
 # Set up GitHub models
 endpoint = "https://models.inference.ai.azure.com"
-model_name = "text-embedding-3-small"
+embedding_model_name = "text-embedding-3-small"
+model_name = "gpt-4o"
 token = os.environ["GITHUB_TOKEN"]
 
 # Set up Postgres
@@ -48,7 +49,12 @@ register_vector(conn)
 cur.execute("CREATE EXTENSION IF NOT EXISTS vector")
 
 # Get question from user
-question = "is it possible to build custom chat participant for github copilot?"
+question = "recommend videos on learning python?"
+# question = "videos about databases?"
+# question = "recommend videos on building custom chat?"
+# question = "does vscode support python?"
+# question = "does vscode supports extensions?"
+# question = "how many of these videos are youtube shorts?"
 
 # Use question to search Postgres table using LIKE operator on title/description
 # cur.execute(
@@ -83,7 +89,7 @@ question = "is it possible to build custom chat participant for github copilot?"
 # Turn the question into an embedding
 client = EmbeddingsClient(endpoint=endpoint, credential=AzureKeyCredential(token))
 
-response = client.embed(input=question, model=model_name, dimensions=256)
+response = client.embed(input=question, model=embedding_model_name, dimensions=256)
 embedding = np.array(response.data[0].embedding)
 
 # Do a Postgres vector embedding search on embedding column with cosine operator
@@ -127,6 +133,8 @@ cur.execute("SELECT id, title, description FROM videos WHERE id = ANY(%s)", (ids
 results = cur.fetchall()
 for result in results:
     print(result[1])
+print()
+print()
 
 # Format the results for the LLM
 formatted_results = ""
@@ -141,15 +149,15 @@ client = ChatCompletionsClient(
 response = client.complete(
     messages=[
         SystemMessage(
-            content="You must answer user question according to sources. Say you dont know if you cant find answer in sources. Cite the title of each video inside square brackets. The title of each video which will be a markdown heading."
+            content="You must answer user question according to sources. Say you dont know if you cant find answer in sources. The title of each video which will be a markdown heading."
         ),
         UserMessage(content=question + "\n\nSources:\n\n" + formatted_results),
     ],
-    model="gpt-4o",
+    model=model_name,
     temperature=0.3,
     max_tokens=1000,
-    top_p=1.0
+    top_p=1.0,
 )
 
-print("Answer:\n\n")
+print("# Chat answer:\n")
 print(response.choices[0].message.content)
